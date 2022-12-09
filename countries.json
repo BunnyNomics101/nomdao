@@ -1,5 +1,13 @@
 [
 {
+	"name" : "Thanos" ,
+	"latlng": [
+		 25,
+		-40
+	],
+	"population" : 1
+} ,
+{
 "name": "Afghanistan",
 "topLevelDomain": [
 ".af"
