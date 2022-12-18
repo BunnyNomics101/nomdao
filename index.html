@@ -15,7 +15,7 @@
 	<script src='./js/TweenMax.min.js'></script>
 
 	<title>
-		world v221213 x joserpagil@gmail.
+		world v221218 x joserpagil@gmail.
 	</title>
 
 </head>
@@ -314,189 +314,237 @@
 			let   tunnel                       = null
 			let   gl_canvas			
 			
-			class Tunnel extends THREE . Group {
-				constructor          ( args ) {
-					super ( args )
-					
-					this . scene               = new THREE . Scene ()
-					this . camera              = new THREE . PerspectiveCamera ( 15 , canvas . width / canvas . height , 0.01 , 1000 )
-					this . camera . rotation.y = Math . PI / 1
-					this . camera . position.z = 0.35					
-					this . canvas               = document . createElement ( 'canvas' )
-					this . renderer             = new THREE . WebGLRenderer( { canvas : this.canvas, alpha : true } )
-					this . renderer . setSize ( canvas . width , canvas . height )
-					this . renderer . setClearColor ( 0x00ff00 )
-					
-					this . speed                = 5
-					
-					this . create_mesh ( args )
-					
-					// Timeline animation
-					this.textureParams = {
-						offsetX: 0,
-						offsetY: 0,
-						repeatX: 10,
-						repeatY: 4
-					};
-					this.cameraShake = {
-						x: 0,
-						y: 0
-					};
-					var self = this;
-					var hyperSpace = new TimelineMax({ repeat: -1 });
-					hyperSpace.to(this.textureParams, 4, {
-						repeatX: 0.3,
-						ease: Power1.easeInOut
-					});
-					hyperSpace.to(
-						this.textureParams,
-						12,
-						{
-							offsetX: 8,
-							ease: Power2.easeInOut
-						},
-						0
-					);
-					hyperSpace.to(
-						this.textureParams,
-						6,
-						{
-							repeatX: 10,
-							ease: Power2.easeInOut
-						},
-						"-=5"
-					);
-					var shake = new TimelineMax({ repeat: -1, repeatDelay: 5 });
-					shake.to(
-						this.cameraShake,
-						2,
-						{
-							x: -0.01,
-							ease: RoughEase.ease.config({
-								template: Power0.easeNone,
-								strength: 0.5,
-								points: 100,
-								taper: "none",
-								randomize: true,
-								clamp: false
-							})
-						},
-						4
-					);
-					shake.to(this.cameraShake, 2, {
-						x: 0,
-						ease: RoughEase.ease.config({
-							template: Power0.easeNone,
-							strength: 0.5,
-							points: 100,
-							taper: "none",
-							randomize: true,
-							clamp: false
-						})
-					});
-					
+			class Tunnel {
+				constructor          ( texture )    {
+				  this.init();
+				  this.createMesh(texture);
+
+				  this.handleEvents();
+
+				  this.initAnimation();
+
+				  window.requestAnimationFrame(this.render.bind(this));
 				}
-				create_mesh          ( args ) {
-					const points = []
-					let   i = 0
-					let   geometry = new THREE . BufferGeometry ()
-
-					this . scene . remove ( this . tubeMesh )
-
-					for ( let i = 0 ; i < 5 ; i ++ ) {
-						points . push ( new THREE . Vector3 ( 0 , 0 , 3 * ( i / 4 ) ) )
-					}
-					points [ 4 ] . y = -0.06
-
-					this . curve        = new THREE . CatmullRomCurve3 ( points )
-					this . curve . type = "catmullrom"
-
-					geometry            = new THREE . BufferGeometry ()
-					geometry . vertices = this . curve . getPoints ( 70 )
-					this . splineMesh = new THREE . Line ( geometry , new THREE . LineBasicMaterial () )
-
-					this . tubeMaterial = new THREE . MeshBasicMaterial( {
-						side : THREE.BackSide ,
-						map  : args . texture
-					} )
-					this . tubeMaterial . map . wrapS = THREE . MirroredRepeatWrapping
-					this . tubeMaterial . map . wrapT = THREE . MirroredRepeatWrapping
-					this . tubeMaterial . map . repeat . set (
-						this . tubeMaterial . repx,
-						this . tubeMaterial . repy
-					);
-
-					this . tubeGeometry   = new THREE . TubeGeometry ( this . curve , 70 , 0.02 , 30 , false )
-					this . tubeGeometry_o = this . tubeGeometry . clone()
-					this . tubeMesh       = new THREE . Mesh ( this . tubeGeometry , this . tubeMaterial )
+				init                 ( args )    {
+					const ww = window.innerWidth;
+					const wh = window.innerHeight;
 					
-					this . set_lat_lon ( args )
+				  this.speed = 8;
 
-					this . scene . add ( this . tubeMesh )
-				}
-				set_lat_lon          ( args ) {
-					this . position . copy ( Lat_lon_to_cartesian ( args ) )
-					this . rotation . set  ( - args . lat * Math . PI / 180 , args . lon * Math . PI / 180 , 0 , 'YXZ' )    
-				}
-				animate              ( args ) {
-					this . updateMaterialOffset () 
-					this . updateCurve          ()
-					this . render               ()
-				}
-				render               ( args ) {
-					this . renderer . render ( this . scene , this . camera )
-				}
-				updateMaterialOffset ( args ) {
-					this.tubeMaterial.map.offset.x = this.textureParams.offsetX;
-					this.tubeMaterial.map.offset.y += 0.001;
-					this.tubeMaterial.map.repeat.set(
-						this.textureParams.repeatX,
-						this.textureParams.repeatY
-					);
-				};				
-				updateCameraPosition ( args ) {
-					this.mouse.position.x += (this.mouse.target.x - this.mouse.position.x) / 50;
-					this.mouse.position.y += (this.mouse.target.y - this.mouse.position.y) / 50;
+				  this . mouse = {
+					position : new THREE . Vector2 ( ww * 0.5 , wh * 0.5 ) ,
+					ratio    : new THREE . Vector2 ( 0        , 0        ) ,
+					target   : new THREE . Vector2 ( ww * 0.5 , wh * 0.5 )
+				  }
+				  
+				  this . canvas          = document . createElement ( 'canvas' )
+				  this . canvas . width  = canvas . width
+				  this . canvas . height = canvas . height
 
-					this.mouse.ratio.x = this.mouse.position.x / ww;
-					this.mouse.ratio.y = this.mouse.position.y / wh;
+				  this.renderer = new THREE.WebGLRenderer({
+					antialias: true,
+					canvas: this . canvas //document.querySelector("#scene")
+				  });
+				  this.renderer.setSize(ww, wh);
 
-					this.camera.position.x =
-					this.mouse.ratio.x * 0.044 - 0.025 + this.cameraShake.x;
-					this.camera.position.y = this.mouse.ratio.y * 0.044 - 0.025;
+				  this.camera = new THREE.PerspectiveCamera(15, ww / wh, 0.01, 1000);
+				  this.camera.rotation.y = Math.PI;
+				  
+				  this.camera.position.z = 2 //0.35;
+
+				  this.scene = new THREE.Scene();
 				};
-				updateCurve          ( args ) {
-					var i = 0;
-					var index = 0;
-					var vertice_o = null;
-					var vertice = null;
-					for (i = 0; i < this.tubeGeometry.attributes.position.count; i += 1) {
+				createMesh           ( texture ) {
+				  var points = [];
+				  var i = 0;
+				  var geometry = new THREE.BufferGeometry();
+
+				  this.scene.remove(this.tubeMesh);
+
+				  for (i = 0; i < 5; i += 1) {
+					points.push(new THREE.Vector3(0, 0, 3 * (i / 4)));
+				  }
+				  points[4].y = -0.06;
+
+				  this.curve = new THREE.CatmullRomCurve3(points);
+				  this.curve.type = "catmullrom";
+
+				  geometry = new THREE.BufferGeometry();
+				  geometry.vertices = this.curve.getPoints(70);
+				  this.splineMesh = new THREE.Line(geometry, new THREE.LineBasicMaterial());
+
+				  this.tubeMaterial = new THREE.MeshBasicMaterial({
+					wireframe : false ,
+					side: THREE.BackSide,
+					map: texture
+				  });
+				  this.tubeMaterial.map.wrapS = THREE.MirroredRepeatWrapping;
+				  this.tubeMaterial.map.wrapT = THREE.MirroredRepeatWrapping;
+				  this.tubeMaterial.map.repeat.set(
+					this.tubeMaterial.repx,
+					this.tubeMaterial.repy
+				  );
+
+				  this.tubeGeometry = new THREE.TubeGeometry(this.curve, 70, 0.02, 30, false);
+				  this.tubeGeometry_o = this.tubeGeometry.clone();
+				  this.tubeMesh = new THREE.Mesh(this.tubeGeometry, this.tubeMaterial);
+
+				  this.scene.add(this.tubeMesh);
+				};
+				handleEvents         ( args )    {
+				  window.addEventListener("resize", this.onResize.bind(this), false);
+				  document.body.addEventListener(
+					"mousemove",
+					this.onMouseMove.bind(this),
+					false
+				  );
+				};
+				onResize             ( args )    {
+				  ww = window.innerWidth;
+				  wh = window.innerHeight;
+
+				  this.camera.aspect = ww / wh;
+				  this.camera.updateProjectionMatrix();
+				  this.renderer.setSize(ww, wh);
+				};
+				onMouseMove          ( e )    {
+					this.mouse.target.x = e.clientX
+					this.mouse.target.y = e.clientY
+
+					this.mouse.position.x = e.clientX
+					this.mouse.position.y = e.clientY
+				};
+				update               ( args )    {
+				  this.createMesh();
+				};
+				initAnimation        ( args )    {
+				  // Timeline animation
+				  this.textureParams = {
+					offsetX: 0,
+					offsetY: 0,
+					repeatX: 10,
+					repeatY: 4
+				  };
+				  this.cameraShake = {
+					x: 0,
+					y: 0
+				  };
+				  var self = this;
+				  var hyperSpace = new TimelineMax({ repeat: -1 });
+				  hyperSpace.to(this.textureParams, 4, {
+					repeatX: 0.3,
+					ease: Power1.easeInOut
+				  });
+				  hyperSpace.to(
+					this.textureParams,
+					12,
+					{
+					  offsetX: 8,
+					  ease: Power2.easeInOut
+					},
+					0
+				  );
+				  hyperSpace.to(
+					this.textureParams,
+					6,
+					{
+					  repeatX: 10,
+					  ease: Power2.easeInOut
+					},
+					"-=5"
+				  );
+				  var shake = new TimelineMax({ repeat: -1, repeatDelay: 5 });
+				  shake.to(
+					this.cameraShake,
+					2,
+					{
+					  x: -0.01,
+					  ease: RoughEase.ease.config({
+						template: Power0.easeNone,
+						strength: 0.5,
+						points: 100,
+						taper: "none",
+						randomize: true,
+						clamp: false
+					  })
+					},
+					4
+				  );
+				  shake.to(this.cameraShake, 2, {
+					x: 0,
+					ease: RoughEase.ease.config({
+					  template: Power0.easeNone,
+					  strength: 0.5,
+					  points: 100,
+					  taper: "none",
+					  randomize: true,
+					  clamp: false
+					})
+				  });
+				};
+				updateMaterialOffset ( args )    {
+				  this.tubeMaterial.map.offset.x = this.textureParams.offsetX;
+				  this.tubeMaterial.map.offset.y += 0.001;
+				  this.tubeMaterial.map.repeat.set(
+					this.textureParams.repeatX,
+					this.textureParams.repeatY
+				  );
+				};
+				updateCameraPosition ( args )    { 
+					const ww = window.innerWidth  ;
+					const wh = window.innerHeight ;
+					
+					const x = ( this . mouse . position . x - ww / 2 ) * .02
+					const y = ( this . mouse . position . y - wh / 2 ) * .02
+
+				  this.camera.position.x = x / ww //this.mouse.ratio.x * 0.044 - 0.025 + this.cameraShake.x;
+				  this.camera.position.y = y / wh //this.mouse.ratio.y * 0.044 - 0.025;
+				};
+				updateCurve          ( args )    {
+				  var i = 0;
+				  var index = 0;
+				  var vertice_o = null;
+				  var vertice = null;
+				  for (i = 0; i < this.tubeGeometry.attributes.position.count; i += 1) {
+					//vertice_o = this.tubeGeometry_o.vertices[i];
+					//vertice = this.tubeGeometry.vertices[i];
 						vertice_o = { x : this.tubeGeometry_o.attributes.position.array[i] , y : this.tubeGeometry_o.attributes.position.array[i + 1] }
 						vertice = { x : this.tubeGeometry.attributes.position.array[i] , y : this.tubeGeometry.attributes.position.array[i+ 1] }
-						index = Math.floor(i / 30);
-						vertice.x +=
-						(vertice_o.x + this.splineMesh.geometry.vertices[index] - vertice.x) /
-						15;
-						vertice.y +=
-						(vertice_o.y + this.splineMesh.geometry.vertices[index+1] - vertice.y) /
-						15;
-					}
-					this.tubeGeometry.verticesNeedUpdate = true;
+					
+					index = Math.floor(i / 30);
+					
+					//vertice.x += (vertice_o.x + this.splineMesh.geometry.vertices[index].x - vertice.x) / 15;
+					//vertice.y += (vertice_o.y + this.splineMesh.geometry.vertices[index].y - vertice.y) / 15;
+					  
+					vertice.x += (vertice_o.x + this.splineMesh.geometry.vertices[index] - vertice.x) / 15;
+					vertice.y += (vertice_o.y + this.splineMesh.geometry.vertices[index+1] - vertice.y) / 15;
+					  
+				  }
+				  this.tubeGeometry.verticesNeedUpdate = true;
 
-/*
-					this.curve.points[2].x = 0.6 * (1 - this.mouse.ratio.x) - 0.3;
-					this.curve.points[3].x = 0;
-					this.curve.points[4].x = 0.6 * (1 - this.mouse.ratio.x) - 0.3;
+				  this.curve.points[2].x = 0.6 * (1 - this.mouse.ratio.x) - 0.3;
+				  this.curve.points[3].x = 0;
+				  this.curve.points[4].x = 0.6 * (1 - this.mouse.ratio.x) - 0.3;
 
-					this.curve.points[2].y = 0.6 * (1 - this.mouse.ratio.y) - 0.3;
-					this.curve.points[3].y = 0;
-					this.curve.points[4].y = 0.6 * (1 - this.mouse.ratio.y) - 0.3;
-*/
-					this.splineMesh.geometry.verticesNeedUpdate = true;
-					this.splineMesh.geometry.vertices = this.curve.getPoints(70);
+				  this.curve.points[2].y = 0.6 * (1 - this.mouse.ratio.y) - 0.3;
+				  this.curve.points[3].y = 0;
+				  this.curve.points[4].y = 0.6 * (1 - this.mouse.ratio.y) - 0.3;
+
+				  this.splineMesh.geometry.verticesNeedUpdate = true;
+				  this.splineMesh.geometry.vertices = this.curve.getPoints(70);
 				};
-			}
+				render               ( args )    {
+				  this.updateMaterialOffset();
 
+				  this.updateCameraPosition();
+
+				  this.updateCurve();
+
+				  this.renderer.render(this.scene, this.camera);
+
+				  window.requestAnimationFrame(this.render.bind(this));
+				};
+			}			
 			const Quadratic_bezier_at          = args => {
 				let t = args.t
 				let one_minus_t = 1 - t
@@ -1275,10 +1323,10 @@
 					function animate () {
 						portal.animate()
 						
-						if ( tunnel ) {
-							tunnel . animate ()
-							context . drawImage ( tunnel . canvas , 0 , 0 )
-						}
+						//if ( tunnel ) {
+							//tunnel . animate ()
+							//context . drawImage ( tunnel . canvas , 0 , 0 )
+						//}
 						
 						//group.rotation.y += 0.001
 						clouds.rotation.y -= 0.0001
@@ -1341,6 +1389,10 @@
 						}
 
 						renderer.render(scene, camera);
+						
+						if ( tunnel ) {
+							context . drawImage ( tunnel . canvas , 0 , 0 )
+						}
 						context . drawImage ( gl_canvas , 0 , 0 )
 						Animate_eventos ()
 						
@@ -1460,7 +1512,7 @@
 				loader . load (
 					"./assets/galaxyTexture.jpg",
 					texture => {
-						tunnel = new Tunnel ( { texture , radius : 3 , lat : 25 , lon : -50 } )
+						tunnel = new Tunnel ( texture ) //{ texture , radius : 3 , lat : 25 , lon : -50 } )
 					}
 				)							
 				
