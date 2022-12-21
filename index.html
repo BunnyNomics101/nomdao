@@ -731,16 +731,16 @@
 			}
 			class Marker extends Lat_lon                 {
 				static Instances   = []
-				static Marker_size = .1
+				static Marker_size = .5
 				static Mesh_group  = new THREE . Group ()
 				
 				static Animate_markers              = args => {
 					let tile_vector        = new THREE . Vector3  ()
 					let nt                 = 0
 					let rain_time_elapsed  = new Date() . getTime () - rain . start
-
-					for ( let marker of Marker . Instances ) { 
-						marker . mesh . material . uniforms [ 'u_time' ] = { value : performance . now () / 30000 }
+					
+					for ( let [ index , marker ] of Marker . Instances . entries () ) { 
+						marker . mesh . material . uniforms [ 'u_time' ] = { value : performance . now () / ( index * 64 + 1000 ) }
 						
 						const cartesian = Lat_lon_to_cartesian ( { lat : marker . lat , lon : marker . lon } )
 						tile_vector . set ( cartesian . x , cartesian . y , cartesian . z )
@@ -767,8 +767,8 @@
 					
 					this . mesh = new THREE . Mesh ( 
 						new THREE . PlaneGeometry ( Marker . Marker_size , Marker . Marker_size ) , 
-						//new THREE . MeshBasicMaterial ( { color : 'yellow' , side  : THREE.DoubleSide , } )
 						new THREE . ShaderMaterial ( { 
+							depthTest    : false ,
 							transparent  : true ,
 							vertexShader : `
 								varying vec2 UV ;
@@ -784,8 +784,8 @@
 
 								void main() {
 									vec2 uv = UV * 2. - 1. ;
-									float i = length ( uv ) * u_time ;
-									i += abs ( uv . x * uv . y * 100. * u_time ) ;
+									float i = length ( uv ) ; //* fract ( u_time ) ;
+									i += abs ( uv . x * uv . y * 50. * fract ( u_time ) ) ;
 									gl_FragColor = vec4 ( 1. - i , 1. - i , 0 , 1. - i ) ;
 								}							
 							` ,
