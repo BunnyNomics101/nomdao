@@ -15,7 +15,7 @@
 	<script src='./js/TweenMax.min.js'></script>
 
 	<title>
-		world v221218 x joserpagil@gmail.
+		world v221221 x joserpagil@gmail.
 	</title>
 
 </head>
@@ -268,6 +268,7 @@
 			let   scene                        = null
 			let   camera                       = null
 			let   renderer                     = null
+			let   render_target			
 			let   raycaster                    = null
 			const data_point_threshold         = .75 
 			let   spinner_mesh
@@ -314,7 +315,78 @@
 			let   tunnel                       = null
 			let   gl_canvas			
 			
-			class Tunnel {
+			let   planet_clouds_stars_and_portal_group
+			
+			class Post                                   {
+				constructor ( args ) {
+					this . scene  = new THREE.Scene()
+					this . camera = new THREE.
+					  PerspectiveCamera(
+					  75, 
+					  width / height , //canvasContainer.offsetWidth / canvasContainer.offsetHeight,
+					  0.1,
+					  1000
+					)
+
+					//new renderer
+					this . gl_canvas           = document . createElement ( 'canvas' )
+					this . gl_canvas . width   = width
+					this . gl_canvas . height  = height
+
+					this . renderer            = new THREE.WebGLRenderer  ( { canvas : this . gl_canvas , alpha : true , antialias : false } )
+					this . renderer  . setSize                            ( width , height )
+					
+					this . mesh                = new THREE . Mesh (
+						new THREE . PlaneGeometry ( 2 , 2 ) ,
+						new THREE . ShaderMaterial ( {
+							vertexShader: `
+								varying vec2 UV ;
+
+								void main () {
+									UV          = uv ;
+									gl_Position = vec4 ( position , 1. ) ;
+								}` ,
+							fragmentShader: `
+								uniform float u_date ;
+								uniform vec2  u_resolution ;
+
+								varying vec2 UV ;
+								
+								void main () {
+									//vec2  uv      = ( gl_FragCoord . xy - .5 * u_resolution . xy ) / u_resolution . y ;
+									vec2  uv      = UV * 2. - 1. ;
+									uv           *= 3. ;
+									vec3  col     = vec3 ( 0 ) ;
+									float d       = length ( uv ) ;
+									float m       = .02 / d ;
+									col          += m ;
+									
+									//float rays    = max ( 0. , 1. - abs ( uv . x * uv . y * 10. ) ) ;
+									float rays    = 1. - abs ( uv . x * 10000. )  ;
+									col          += rays ;
+									
+									gl_FragColor  = vec4 ( col , 1. ) ;
+								}
+							`, 
+						})
+					)
+					this . scene . add ( this . mesh )
+				}
+				render      ( args ) {
+					if ( ! args ) return
+					if ( ! 'texture_map' in args ) return
+					
+					//this . mesh     . material . uniforms . texture_map . value = args . texture_map
+					//this . mesh     . material . uniforms . texture_map . value = render_target . texture
+					//this . mesh     . material . uniforms [ 'texture_map' ] = { value : args . texture_map }
+					this . mesh     . material . uniforms [ 'u_date'       ] = { value : performance . now () }
+					this . mesh     . material . uniforms [ 'u_resolution' ] = { value : new THREE . Vector2 ( this . gl_canvas . width , this . gl_canvas . height ) }
+					console . log ( this . gl_canvas . width , this . gl_canvas . height )
+					//this . mesh     . material . needsUpdate = true
+					this . renderer . render                                  ( this . scene , this . camera )
+				}
+			}
+			class Tunnel                                 {
 				constructor          ( texture )    {
 				  this.init();
 				  this.createMesh(texture);
@@ -323,7 +395,7 @@
 
 				  this.initAnimation();
 
-				  window.requestAnimationFrame(this.render.bind(this));
+				  //window.requestAnimationFrame(this.render.bind(this));
 				}
 				init                 ( args )    {
 					const ww = window.innerWidth;
@@ -400,8 +472,8 @@
 				  );
 				};
 				onResize             ( args )    {
-				  ww = window.innerWidth;
-				  wh = window.innerHeight;
+				  const ww = window.innerWidth;
+				  const wh = window.innerHeight;
 
 				  this.camera.aspect = ww / wh;
 				  this.camera.updateProjectionMatrix();
@@ -542,7 +614,7 @@
 
 				  this.renderer.render(this.scene, this.camera);
 
-				  window.requestAnimationFrame(this.render.bind(this));
+				  //window.requestAnimationFrame(this.render.bind(this));
 				};
 			}			
 			const Quadratic_bezier_at          = args => {
@@ -659,7 +731,8 @@
 			}
 			class Marker extends Lat_lon                 {
 				static Instances   = []
-				static Marker_size = .05
+				static Marker_size = .1
+				static Mesh_group  = new THREE . Group ()
 				
 				static Animate_markers              = args => {
 					let tile_vector        = new THREE . Vector3  ()
@@ -667,6 +740,8 @@
 					let rain_time_elapsed  = new Date() . getTime () - rain . start
 
 					for ( let marker of Marker . Instances ) { 
+						marker . mesh . material . uniforms [ 'u_time' ] = { value : performance . now () / 30000 }
+						
 						const cartesian = Lat_lon_to_cartesian ( { lat : marker . lat , lon : marker . lon } )
 						tile_vector . set ( cartesian . x , cartesian . y , cartesian . z )
 					
@@ -692,16 +767,36 @@
 					
 					this . mesh = new THREE . Mesh ( 
 						new THREE . PlaneGeometry ( Marker . Marker_size , Marker . Marker_size ) , 
-						new THREE . MeshBasicMaterial ( {
-							color : 'hotpink' ,
-							side  : THREE.DoubleSide ,
+						//new THREE . MeshBasicMaterial ( { color : 'yellow' , side  : THREE.DoubleSide , } )
+						new THREE . ShaderMaterial ( { 
+							transparent  : true ,
+							vertexShader : `
+								varying vec2 UV ;
+
+								void main() {
+									UV = uv ;
+									gl_Position = projectionMatrix * modelViewMatrix * vec4 ( position , 1.0 ) ;
+								}` ,
+							fragmentShader : `
+								uniform float u_time ;
+								
+								varying vec2  UV ;
+
+								void main() {
+									vec2 uv = UV * 2. - 1. ;
+									float i = length ( uv ) * u_time ;
+									i += abs ( uv . x * uv . y * 100. * u_time ) ;
+									gl_FragColor = vec4 ( 1. - i , 1. - i , 0 , 1. - i ) ;
+								}							
+							` ,
 						} )
 					)
 					const cartesian = Lat_lon_to_cartesian ( { lat : this . lat , lon : this .lon } )
 					this . mesh . lookAt         ( cartesian . x        , cartesian . y      , cartesian . z ) 
 					this . mesh . position . set ( cartesian . x        , cartesian . y      , cartesian . z )
 					
-					Marker . Instances . push ( this )
+					Marker . Instances  . push ( this )
+					Marker . Mesh_group . add  ( this . mesh )
 				}
 			}
 			class Evento                                 {
@@ -983,6 +1078,7 @@
 					*/
 
 					let portal
+					let post
 
 					const canvasContainer = container_ref . current // document . querySelector('#canvasContainer')
 					
@@ -1005,8 +1101,11 @@
 					//renderer = new THREE.WebGLRenderer( /*{ canvas: document.querySelector('canvas') }*/ )
 					
 					renderer.setSize( width , height )//canvasContainer.offsetWidth, canvasContainer.offsetHeight)
+					renderer . autoClear = false 
 					//renderer.setPixelRatio(window.devicePixelRatio)
-					canvasContainer . appendChild ( renderer . domElement )		
+					canvasContainer . appendChild ( renderer . domElement )
+					
+					render_target = new THREE . WebGLRenderTarget ( width , height )
 
 					raycaster = new THREE . Raycaster ()
 
@@ -1052,7 +1151,7 @@
 						}
 					  })
 					)
-					scene.add(sphere)
+					//scene.add(sphere)
 
 					//clouds
 					const clouds = new THREE.Mesh(
@@ -1063,7 +1162,7 @@
 						depthWrite : false
 					  })
 					)
-					scene.add(clouds)
+					//scene.add(clouds)
 /*
 					// create atmosphere
 					const atmosphere = new THREE.Mesh(
@@ -1080,9 +1179,6 @@
 
 					scene.add(atmosphere)
 */
-					const group = new THREE.Group()
-					group.add(sphere)
-					scene.add(group)
 
 					//create stars
 					const starGeometry = new THREE.BufferGeometry()
@@ -1104,8 +1200,12 @@
 
 					  const stars = new THREE.Points(
 						starGeometry, starMaterial)
-					scene.add(stars)
-
+					
+					planet_clouds_stars_and_portal_group       = new THREE . Group ()
+					planet_clouds_stars_and_portal_group . add                     ( sphere )
+					planet_clouds_stars_and_portal_group . add                     ( clouds )
+					planet_clouds_stars_and_portal_group . add                     ( stars )
+					
 					camera.position.z = 10
 
 					function createBoxes(countries){
@@ -1187,10 +1287,7 @@
 						.then((json) => createBoxes(json));					
 
 					sphere.rotation.y = -Math.PI / 2
-					group.rotation.offset = {
-					  x: 0,
-					  y: 0
-					}
+					//group.rotation.offset = { x: 0, y: 0 }
 
 					const mouse = {
 					  x: undefined,
@@ -1208,10 +1305,10 @@
 					canvasContainer.addEventListener("resize", onWindowResize, false);
 
 					function onWindowResize() {
-					  camera.aspect = canvasContainer.offsetWidth / canvasContainer.offsetHeight;
-					  camera.updateProjectionMatrix();
+					  //camera.aspect = canvasContainer.offsetWidth / canvasContainer.offsetHeight;
+					  //camera.updateProjectionMatrix();
 
-					  renderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
+					  //renderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
 					}
 
 					//mobile resonsiveness
@@ -1240,7 +1337,8 @@
 						
 						this.clock = new THREE.Clock ()
 						
-						this.plane = new THREE.Mesh(new THREE.PlaneGeometry(args.radius, args.radius), new THREE.MeshBasicMaterial( { transparent : true } ))
+						this.plane = new THREE.Mesh(new THREE.PlaneGeometry(args.radius, args.radius), 
+						new THREE.MeshBasicMaterial( { transparent : true } ))
 						this.add(this.plane)
 						
 						this . set_lat_lon ( args )
@@ -1318,11 +1416,12 @@
 					}
 
 					portal = new Portal( {radius: 3, lat: 25, lon: -40} )
-					scene.add(portal)
+					planet_clouds_stars_and_portal_group . add ( portal )
+					
+					post = new Post ()
 
 					function animate () {
-						portal.animate()
-						
+						context . clearRect ( 0 , 0 , canvas . width , canvas . height )
 						//if ( tunnel ) {
 							//tunnel . animate ()
 							//context . drawImage ( tunnel . canvas , 0 , 0 )
@@ -1384,23 +1483,59 @@
 						}					
 						*/
 						
-						if ( marker_modes . mode  != marker_modes . hidden ) {
-							for ( const marker of Marker . Instances ) scene . add ( marker . mesh )
-						}
-
-						renderer.render(scene, camera);
-						
 						if ( tunnel ) {
+							tunnel  . render    ()
 							context . drawImage ( tunnel . canvas , 0 , 0 )
 						}
-						context . drawImage ( gl_canvas , 0 , 0 )
+						
+						portal . animate()					
+
+
+						scene    . add             ( planet_clouds_stars_and_portal_group )
+						renderer . render          ( scene , camera )
+						scene    . remove          ( planet_clouds_stars_and_portal_group )
+						
+						scene    . add             ( Marker . Mesh_group )
+						renderer . render          ( scene , camera )
+						scene    . remove          ( Marker . Mesh_group )
+
+						context  . drawImage ( gl_canvas , 0 , 0 )
+/*						
+						const texture_canvas = document . createElement ( 'canvas' )
+						const texture_context = texture_canvas . getContext ( '2d' )
+						texture_context . fillStyle = 'red'
+						texture_context . fillRect ( 0 , 0 , texture_canvas . width , texture_canvas . height )
+						const texture = new THREE . CanvasTexture ( texture_canvas )
+*/
+
+						//const texture = new THREE . CanvasTexture ( gl_canvas )
+						
+						//post     . render          ( { texture_map : texture } )
+						//context  . drawImage       ( post . gl_canvas , 0 , 0 )
+
+						//context  . drawImage       ( gl_canvas , 0 , 0 )
+						
+/*
+						scene    . add             ( planet_clouds_stars_and_portal_group )
+						renderer . setRenderTarget ( render_target )
+						renderer . render          ( scene , camera )
+						renderer . setRenderTarget ( null )
+						scene    . remove          ( planet_clouds_stars_and_portal_group )
+						//context  . drawImage ( gl_canvas , 0 , 0 )
+						post     . render                                                   ( { texture_map : render_target . texture } )
+						context  . drawImage                                                ( post . gl_canvas , 0 , 0 )
+						
+						if ( marker_modes . mode  != marker_modes . hidden ) scene . add    ( Marker . Mesh_group )
+						renderer . setRenderTarget                                          ( render_target )
+						//renderer . clear                                                    ()
+						renderer . render                                                   ( scene , camera )
+						renderer . setRenderTarget                                          ( null )
+						if ( marker_modes . mode  != marker_modes . hidden ) scene . remove ( Marker . Mesh_group )
+						post     . render                                                   ( { texture_map : render_target . texture } )
+						context  . drawImage                                                ( post . gl_canvas , 0 , 0 )
+*/						
 						Animate_eventos ()
 						
-
-						if ( marker_modes . mode  != marker_modes . hidden ) {
-							for ( const marker of Marker . Instances ) scene . remove ( marker . mesh )
-						}
-
 						requestAnimationFrame(animate)
 					}
 
