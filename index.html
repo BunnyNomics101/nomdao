@@ -1255,7 +1255,7 @@
 */
 
 					//create stars
-					const starGeometry = new THREE.BufferGeometry()
+/* 					const starGeometry = new THREE.BufferGeometry()
 					const starMaterial = new THREE.PointsMaterial ({
 					  color: 0xffffff
 					})
@@ -1274,11 +1274,13 @@
 
 					  const stars = new THREE.Points(
 						starGeometry, starMaterial)
+						
+						planet_clouds_stars_and_portal_group . add                     ( stars )
+*/
 					
 					planet_clouds_stars_and_portal_group       = new THREE . Group ()
 					planet_clouds_stars_and_portal_group . add                     ( sphere )
 					planet_clouds_stars_and_portal_group . add                     ( clouds )
-					planet_clouds_stars_and_portal_group . add                     ( stars )
 					
 					camera.position.z = 10
 
