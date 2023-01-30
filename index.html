@@ -11,6 +11,8 @@
 
 	<script src='./js/three.min.js'></script>
 	<script src='./js/OrbitControls.js'></script>
+	<script src='./js/GLTFLoader.js'></script>
+	<script src='./js/DRACOLoader.js'></script>
 
 	<script src='./js/TweenMax.min.js'></script>
 
@@ -1127,33 +1129,8 @@
 					canvas        . height                = height
 					canvas        . style . position      = 'absolute'			
 					context                               = canvas . getContext ( '2d' )
-					//context       . fillStyle             = '0x031928'
-					//context       . fillRect              ( 0 , 0 , canvas . width , canvas . height )
 					context . clearRect ( 0 , 0 , canvas . width , canvas . height )
 					container_ref . current . appendChild ( canvas )
-
-					/*
-					const canvas = document . createElement ( 'canvas' )
-					const context = canvas . getContext ( '2d' )
-					context . fillStyle = 'red'
-					context . fillRect ( 0 , 0 , canvas . width , canvas . height )
-					container_ref . current . appendChild ( canvas )
-					*/
-					
-					/*
-					import './style.css'
-					import * as THREE from 'three'
-					import gsap from 'gsap'
-					import countries from './countries.json'
-					import vertexShader from './src/shaders/vertex.glsl'
-					import fragmentShader from './src/shaders/fragment.glsl'
-					import atmosphereVertexShader from './src/shaders/atmosphereVertex.glsl'
-					import atmosphereFragmentShader from './src/shaders/atmosphereFragment.glsl'
-					import globe from './src/img/globe.jpeg?url'
-					import cloud from './src/img/earthCloud.png?url'
-					import smoke from './src/img/smoke.png?url'
-					import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-					*/
 
 					let portal
 					let post
@@ -1169,6 +1146,14 @@
 					  0.1,
 					  1000
 					)
+					
+					scene . add ( new THREE . AmbientLight ( - 1 ) )
+					
+					/*
+					const point_light = new THREE . PointLight ( - 1 )
+					point_light . position . set ( 10 , 10 , - 10 )
+					scene . add ( point_light )
+					*/
 
 					//new renderer
 					gl_canvas          = document . createElement ( 'canvas' )
@@ -1196,7 +1181,6 @@
 					// create a sphere
 					sphere = new THREE.Mesh(
 					  new THREE.SphereGeometry(globe_radius, 50, 50),
-					  //new THREE.MeshStandardMaterial ( { map : new THREE.TextureLoader().load('./assets/globe.jpeg') } )
 					  new THREE.ShaderMaterial( {
 						vertexShader : `
 							varying vec2 vertexUV;
@@ -1289,7 +1273,7 @@
 					planet_clouds_stars_and_portal_group . add                     ( sphere )
 					planet_clouds_stars_and_portal_group . add                     ( clouds )
 					
-					camera.position.z = 10
+					camera.position.z = 20
 
 					function createBoxes(countries){
 						let creation = 0
@@ -1741,7 +1725,16 @@
 
 				Init_ThreeJS ()
 				
-				//const gltf_loader = 
+				const gltf_loader = new THREE . GLTFLoader ()
+				gltf_loader . setCrossOrigin ( 'anonymous' )
+				const dracoLoader = new THREE . DRACOLoader () . setDecoderPath ( 'https://unpkg.com/three@0.132.2/examples/js/libs/draco/gltf/' )
+				gltf_loader . setDRACOLoader ( dracoLoader )
+				gltf_loader . load ( './assets/Heighliner_Compressed.glb' , ( gltf ) => {
+					const model = gltf . scene
+					model . position . set ( - 10 , 10 , - 10 )
+					model . rotation . set ( 45 , 45 , 0 )
+					scene . add ( model )
+				})
 				
 				const loader = new THREE . TextureLoader ()
 				loader . load (
@@ -1798,4 +1791,3 @@
 </body>
 
 </html>
-
