@@ -1174,21 +1174,21 @@
 					scene2 = new THREE.Scene()
 					camera2 = new THREE.
 					  PerspectiveCamera(
-					  75, 
+					  50, 
 					  width / height , //canvasContainer.offsetWidth / canvasContainer.offsetHeight,
-					  0.1,
+					  0.01,
 					  1000
 					)
-					//camera2 . position . set ( 0 , 0	 , -.05 )
+					camera2 . rotation . set ( 0 , Math . PI , 0 )
 					//camera2 . lookAt ( scene2 . position )
 					gl_canvas2          = document  . createElement ( 'canvas' )
 					gl_canvas2 . width  = width
 					gl_canvas2 . height = height
 					renderer2           = new THREE . WebGLRenderer ( { canvas : gl_canvas2 , alpha : true , antialias : false } )
 					renderer2  . setSize                            ( width , height )//canvasContainer.offsetWidth, canvasContainer.offsetHeight)					
-					//scene2     . add                                ( new THREE . AmbientLight ( - 1 ) )
-					const point_light   = new THREE . PointLight    ( -1 , 1 )
-					point_light . position . set ( 0 , 1 , -1 )
+					scene2     . add                                ( new THREE . AmbientLight () )
+					const point_light   = new THREE . PointLight    ( - 1 , 1 , 0 , 1 )
+					point_light . position . set ( 0 , 0 , 10 )
 					scene2     . add                                ( point_light )
 
 					raycaster = new THREE . Raycaster ()
@@ -1752,8 +1752,7 @@
 				const gltf_loader = new THREE . GLTFLoader ()
 				gltf_loader . load ( './assets/frame v3.glb' , ( gltf ) => {
 					const mesh = gltf . scene
-					mesh . rotation . set ( .3 , Math . PI , 0 )
-					mesh . position . set ( 0 , -.025 , -.08	 )
+					mesh . position . set ( 0 , 0 , .125	 )
 					scene2 . add ( mesh )
 				} )
 				
