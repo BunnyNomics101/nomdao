@@ -323,6 +323,10 @@
 			
 			let   planet_clouds_stars_and_portal_group
 			
+			let   frame_mesh                           = null
+			
+			let   orbitControls
+			
 			class Post                                   {
 				constructor ( args ) {
 					this . scene  = new THREE.Scene()
@@ -1193,12 +1197,13 @@
 
 					raycaster = new THREE . Raycaster ()
 
-					const controls = new THREE.OrbitControls(camera, canvas ) //renderer.domElement);
-					controls.enableDamping = true;
-					controls.dampingFactor = 0.05;
-					controls.enableZoom = true;
-					controls.enablePan = false;
-
+					orbitControls                 = new THREE . OrbitControls ( camera , canvas )
+					orbitControls . enableDamping = true
+					orbitControls . dampingFactor = 0.05
+					orbitControls . enableZoom    = true
+					orbitControls . enablePan     = false
+					orbitControls . maxDistance   = 100
+					
 					// create a sphere
 					sphere = new THREE.Mesh(
 					  new THREE.SphereGeometry(globe_radius, 50, 50),
@@ -1532,7 +1537,7 @@
 					
 					post = new Post ()
 
-					function animate () {
+					function animate () { // xxx
 						context . clearRect ( 0 , 0 , canvas . width , canvas . height )
 						//if ( tunnel ) {
 							//tunnel . animate ()
@@ -1600,19 +1605,20 @@
 							context . drawImage ( tunnel . canvas , 0 , 0 )
 						}
 						
-						portal . animate()					
+						portal . animate      ()					
 
-
-						scene    . add             ( planet_clouds_stars_and_portal_group )
-						renderer . render          ( scene , camera )
-						scene    . remove          ( planet_clouds_stars_and_portal_group )
+						scene    . add        ( planet_clouds_stars_and_portal_group )
+						renderer . render     ( scene , camera )
+						scene    . remove     ( planet_clouds_stars_and_portal_group )
 						
-						scene    . add             ( Marker . Mesh_group )
-						renderer . render          ( scene , camera )
-						scene    . remove          ( Marker . Mesh_group )
+						scene    . add        ( Marker . Mesh_group )
+						renderer . render     ( scene , camera )
+						scene    . remove     ( Marker . Mesh_group )
 
-						context  . drawImage       ( gl_canvas , 0 , 0 )
+						context  . drawImage  ( gl_canvas , 0 , 0 )
 						
+						const d = Math . min ( camera . position . length () , 100 )
+						if ( frame_mesh ) frame_mesh . position . set ( 0 , .01 , .125 + d / 400 - .25 )
 						renderer2 . render    ( scene2 , camera2 )
 						context   . drawImage ( gl_canvas2 , 0 , 0 )
 						
@@ -1751,9 +1757,9 @@
 				
 				const gltf_loader = new THREE . GLTFLoader ()
 				gltf_loader . load ( './assets/frame v3.glb' , ( gltf ) => {
-					const mesh = gltf . scene
-					mesh . position . set ( 0 , 0 , .125	 )
-					scene2 . add ( mesh )
+					frame_mesh = gltf . scene
+					frame_mesh . position . set ( 0 , .01 , .125 )
+					scene2 . add ( frame_mesh )
 				} )
 				
 				gltf_loader . setCrossOrigin ( 'anonymous' )
