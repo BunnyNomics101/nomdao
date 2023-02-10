@@ -1760,7 +1760,7 @@
 				const gltf_loader = new THREE . GLTFLoader ()
 				gltf_loader . load ( './assets/frame v3.glb' , ( gltf ) => {
 					frame_mesh = gltf . scene
-					frame_mesh . position . set ( 0 , .01 , .125 )
+					frame_mesh . position . set ( 0 , .01 , .250 )
 					scene2 . add ( frame_mesh )
 				} )
 				
@@ -1769,8 +1769,8 @@
 				gltf_loader . setDRACOLoader ( dracoLoader )
 				gltf_loader . load ( './assets/Heighliner_Compressed.glb' , ( gltf ) => {
 					const model = gltf . scene
-					model . position . set ( - 10 , 10 , - 10 )
-					model . rotation . set ( 45 , 45 , 0 )
+					model . position . set ( 0 , 5 , 25 )
+					model . rotation . set ( 0 , 90 , 0 )
 					scene . add ( model )
 				})
 				
