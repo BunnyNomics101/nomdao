@@ -10,7 +10,7 @@
 	<script src='./js/babel.min.js'></script>
 
 	<script src='./js/three.min.js'></script>
-	<script src='./js/OrbitControls.js'></script>
+	<!-- <script src='./js/OrbitControls.js'></script> -->
 	<script src='./js/GLTFLoader.js'></script>
 	<script src='./js/DRACOLoader.js'></script>
 
@@ -316,7 +316,9 @@
 				target        : null                   ,
 			}
 			
-			let   mouse = new THREE . Vector2 ()
+			let   mouse                        = new THREE . Vector2 ()
+			let   wheel_delta
+			
 			let   maximum_selection_distance   = 300
 			
 			let   tunnel                       = null
@@ -325,7 +327,16 @@
 			
 			let   frame_mesh                           = null
 			
-			let   orbitControls
+			let   heighliner = null
+			
+			//let   orbitControls
+			
+			const drag_mode = {
+				dm_none       : 0 ,
+				dm_planet     : 1 ,
+				dm_heighliner : 2 ,
+				mode          : 0 ,
+			}
 			
 			class Post                                   {
 				constructor ( args ) {
@@ -703,6 +714,22 @@
 				mouse.y = - ((Pointers.position.y - ot) / renderer.domElement.clientHeight) * 2 + 1;
 				raycaster.setFromCamera(mouse, camera)
 				let intersection_objects = raycaster.intersectObject( sphere , true)
+				return intersection_objects.length > 0
+			}
+			const Mouse_over_heighliner        = args => {
+				let de = renderer.domElement
+				let ol = renderer.domElement.offsetLeft
+				let ot = renderer.domElement.offsetTop
+				while (de.parentElement != null) {
+					de = de.parentElement
+					ol += de.offsetLeft
+					ot += de.offsetTop
+				}
+
+				mouse.x = ((Pointers.position.x - ol) / renderer.domElement.clientWidth) * 2 - 1;
+				mouse.y = - ((Pointers.position.y - ot) / renderer.domElement.clientHeight) * 2 + 1;
+				raycaster.setFromCamera(mouse, camera)
+				let intersection_objects = raycaster.intersectObject( heighliner , true)
 				return intersection_objects.length > 0
 			}
 			const Evento_at                    = args => {
@@ -1197,6 +1224,7 @@
 
 					raycaster = new THREE . Raycaster ()
 
+					/*
 					orbitControls                 = new THREE . OrbitControls ( camera , canvas )
 					orbitControls . enableDamping = true
 					orbitControls . dampingFactor = 0.05
@@ -1205,6 +1233,7 @@
 					orbitControls . maxDistance   = 100
 					orbitControls . minPolarAngle = Math . PI / 2
 					orbitControls . maxPolarAngle = Math . PI / 2					
+					*/
 					
 					// create a sphere
 					sphere = new THREE.Mesh(
@@ -1398,6 +1427,17 @@
 					  //renderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
 					}
 
+					addEventListener ( 'mousewheel'  , event => {
+						wheel_delta = event . wheelDelta
+
+						let zum = 1.1
+						if ( wheel_delta < 0 ) zum = .9
+			
+						camera . position . multiplyScalar ( zum )
+						if ( camera . position . z > 115 ) camera . position . z = 115
+						if ( camera . position . z <  10 ) camera . position . z =  10
+					} )		
+
 					//mobile resonsiveness
 					//longitude and latitude to cartisan for portal
 					function Lat_lon_to_cartesian(args){
@@ -1562,7 +1602,7 @@
 						if ( Mouse_over_globe () ) {
 							//orbitControls . enableRotate = true
 
-							if (Evento_at() != null)         document.body.style.cursor = 'pointer'
+							if ( Evento_at () != null ) document . body . style . cursor = 'pointer'
 							else {
 								if ( -1 == Pointers.button ) document.body.style.cursor = 'grab'
 							  else                           document.body.style.cursor = 'grabbing'
@@ -1667,26 +1707,50 @@
 					container_ref.current . addEventListener ( 'pointerdown' , function ( event ) {
 						if (event.type === "touchstart") Pointers.position.set(event.touches[0].clientX, event.touches[0].clientY)
 						else Pointers.position.set(event.x, event.y)
+						
+						Pointers . down_position . copy ( Pointers . position )
 
 						Pointers.button = event.button
 
 						Pointers.target = event.target
 
 						Pointers.delta.set(0, 0)
+						
+						if ( Pointers . button != - 1 ) {
+								   if ( Mouse_over_globe      () ) {
+								   drag_mode . mode = drag_mode . dm_planet
+							} else if ( Mouse_over_heighliner () ) {
+								   drag_mode . mode = drag_mode . dm_heighliner
+							}
+						}
+						
+						Pointers . old_position = Pointers . position
 					})
 					container_ref.current . addEventListener ( 'pointermove' , function ( event ) {
-						if (event.type === "touchstart") Pointers.position.set(event.touches[0].clientX, event.touches[0].clientY)
-						else Pointers.position.set(event.x, event.y)
+						if ( event . type === "touchstart" ) Pointers . position . set ( event . touches [ 0 ] . clientX , event . touches [ 0 ] . clientY )
+						else                                 Pointers . position . set ( event . x , event . y )
 
-						//Pointers.button = event.button
+						//Pointers . button = event . button
 
-						Pointers.target = event.target
+						Pointers . target = event . target
 
-						Pointers.delta.set(0, 0)
+						Pointers . delta . set ( Pointers . down_position . x - Pointers . position . x , Pointers . down_position . y - Pointers . position . y )
+						
+						if ( drag_mode . mode != drag_mode . dm_none ) {
+							const y_angle = ( Pointers . delta . x / canvas . width )
+							let mesh = null
+							if ( drag_mode . mode == drag_mode . dm_planet     ) mesh = sphere
+							if ( drag_mode . mode == drag_mode . dm_heighliner ) mesh = heighliner
+							if ( mesh ) {
+								mesh . rotation . y = y_angle
+							}
+						}
+						
+						Pointers . old_position = Pointers . position
 					})
 					container_ref.current . addEventListener ( 'pointerup'   , function ( event ) {
 						if (event.type === "touchstart") Pointers.position.set(event.touches[0].clientX, event.touches[0].clientY)
-						else Pointers.position.set(event.x, event.y)
+						else                             Pointers.position.set(event.x, event.y)
 
 						Pointers.button = event.button
 
@@ -1704,6 +1768,8 @@
 						Evento . showed = Evento_at ()
 						if ( Evento . showed != null )
 							Evento . showed . show ()
+								
+						drag_mode . mode = drag_mode . dm_none
 
 						Pointers.button = - 1
 					})
@@ -1751,7 +1817,6 @@
 					})
 */
 
-					
 					animate()
 				}
 
@@ -1768,10 +1833,10 @@
 				const dracoLoader = new THREE . DRACOLoader () . setDecoderPath ( 'https://unpkg.com/three@0.132.2/examples/js/libs/draco/gltf/' )
 				gltf_loader . setDRACOLoader ( dracoLoader )
 				gltf_loader . load ( './assets/Heighliner_Compressed.glb' , ( gltf ) => {
-					const model = gltf . scene
-					model . position . set ( 0 , 5 , 25 )
-					model . rotation . set ( 0 , 90 , 0 )
-					scene . add ( model )
+					heighliner = gltf . scene
+					heighliner . position . set ( 0 , 5 , 25 )
+					heighliner . rotation . set ( 0 , 90 , 0 )
+					scene . add ( heighliner )
 				})
 				
 				const loader = new THREE . TextureLoader ()
