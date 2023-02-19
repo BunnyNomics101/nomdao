@@ -262,7 +262,7 @@
 
 <body>
 
-	<button id = 'fullscreen_button' onclick = 'Fullscreen_click ()'>[ ]</button>
+	<button id = 'fullscreen_button' onclick = 'Fullscreen_click ()'>[   ]</button>
 	<div id = 'Ap' />
 	</div >
 	
@@ -350,6 +350,8 @@
 			let   heighliner = null
 			
 			let   orbitControls
+			
+			let   tunnel_texture
 			
 			const drag_mode = {
 				dm_none       : 0 ,
@@ -1484,6 +1486,20 @@
 						renderer3       . setSize ( w , h )
 						
 						orbitControls . update ()
+						
+						tunnel = new Tunnel ( tunnel_texture )
+
+						//tunnel . Init ()
+						
+						//tunnel . Update ()
+						
+						//tunnel . onResize ()
+/*
+						tunnel . onMouseMove ( {
+							clientX : innerWidth  / 2 ,
+							clientY : innerheight / 2
+						} )
+*/
 					}
 
 /*
@@ -1908,7 +1924,8 @@
 				loader . load (
 					"./assets/galaxyTexture.jpg",
 					texture => {
-						tunnel = new Tunnel ( texture )
+						tunnel_texture = texture
+						tunnel = new Tunnel ( tunnel_texture )
 					}
 				)											
 			}
