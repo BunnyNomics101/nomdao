@@ -243,6 +243,18 @@
 			margin: auto;
 			text-align: center;
 		}
+		
+		#fullscreen_button {
+			position   : absolute    ;
+			right      : 1vmax       ;
+			bottom     : 1vmax       ;
+			z-index    : 10          ;
+			width      : 96px        ;
+			height     : 96px        ;
+			background : transparent ;
+			color      : white       ;
+			border     : none        ;
+		}
 
 	</style>
 
@@ -250,7 +262,9 @@
 
 <body>
 
-	<div id = 'Ap' /></div >
+	<button id = 'fullscreen_button' onclick = 'Fullscreen_click ()'>[ ]</button>
+	<div id = 'Ap' />
+	</div >
 	
 	<script type='text/babel'>
 			
@@ -1175,7 +1189,7 @@
 
 					let portal
 					let post
-
+					
 					const canvasContainer = container_ref . current // document . querySelector('#canvasContainer')
 					
 					//new scene
@@ -1913,6 +1927,23 @@
 			return <div ref = { container_ref } />
 		}
 
+		let   fullscreen        = false
+		const Open_full_screen  = args => {
+			const documentElement = document . documentElement
+			if ( documentElement . requestFullscreen       ) documentElement . requestFullscreen ()
+			else if ( documentElement . webkitRequestFullscreen ) documentElement . webkitRequestFullscreen ()
+			else if ( documentElement . msRequestFullscreen     ) documentElement . msRequestFullscreen ()
+		}
+		const Close_full_screen = args => {
+			if ( document . exitFullscreen       ) document . exitFullscreen ()
+			else if ( document . webkitExitFullscreen ) document . webkitExitFullscreen ()
+			else if ( document . msExitFullscreen     ) document . msExitFullscreen ()
+		}
+		const Fullscreen_click  = args => {
+			if ( fullscreen = ! fullscreen ) Open_full_screen  ()
+			else                             Close_full_screen ()
+		}				
+				
 		class Ap extends React . Component {
 			constructor ( props ) {
 				super( props )
