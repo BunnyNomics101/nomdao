@@ -17,7 +17,7 @@
 	<script src='./js/TweenMax.min.js'></script>
 
 	<title>
-		nomDAO
+		nomdao
 	</title>
 
 	<style>
@@ -1202,7 +1202,7 @@
 					gl_canvas . height = height
 					renderer                              = new THREE.WebGLRenderer ( { canvas : gl_canvas , alpha : true , antialias : false } )
 					//renderer = new THREE.WebGLRenderer( /*{ canvas: document.querySelector('canvas') }*/ )
-					renderer.setSize( width , height )//canvasContainer.offsetWidth, canvasContainer.offsetHeight)
+					renderer . setSize( width , height )//canvasContainer.offsetWidth, canvasContainer.offsetHeight)
 					renderer . autoClear = false 
 					//renderer.setPixelRatio(window.devicePixelRatio)
 					canvasContainer . appendChild ( renderer . domElement )
@@ -1248,7 +1248,6 @@
 					point_light3 . position . set ( 0 , 0 , 10 )
 					scene3     . add                                ( point_light3 )
 					
-
 					raycaster = new THREE . Raycaster ()
 
 					orbitControls                 = new THREE . OrbitControls ( camera , canvas )
@@ -1257,8 +1256,8 @@
 					orbitControls . enableZoom    = true
 					orbitControls . enablePan     = false
 					orbitControls . maxDistance   = 100
-					orbitControls . minPolarAngle = Math . PI / 2
-					orbitControls . maxPolarAngle = Math . PI / 2					
+					//orbitControls . minPolarAngle = Math . PI / 2
+					//orbitControls . maxPolarAngle = Math . PI / 2					
 					
 					// create a sphere
 					sphere = new THREE.Mesh(
@@ -1442,13 +1441,35 @@
 					const populationEl = document.querySelector('#populationEl') //change
 					const populationValueEl = document.querySelector('#populationValueEl') //change
 
-					canvasContainer.addEventListener("resize", onWindowResize, false);
+					addEventListener("resize", onWindowResize, false);
 
 					function onWindowResize() {
-					  //camera.aspect = canvasContainer.offsetWidth / canvasContainer.offsetHeight;
-					  //camera.updateProjectionMatrix();
+						const w = innerWidth  // canvasContainer . offsetWidth
+						const h = innerHeight //canvasContainer . offsetHeight
+						
+						canvas          . width  = w
+						canvas          . height = h
 
-					  //renderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
+						gl_canvas       . width  = w
+						gl_canvas       . height = h
+						camera          . aspect = w / h
+						camera          . updateProjectionMatrix ()
+						renderer        . setSize ( w , h )
+						render_target   . setSize ( w , h )
+						
+						gl_canvas2      . width  = w
+						gl_canvas2      . height = h
+						camera2         . aspect = w / h
+						camera2         . updateProjectionMatrix ()
+						renderer2       . setSize ( w , h )
+						
+						gl_canvas3      . width  = w
+						gl_canvas3      . height = h
+						camera3         . aspect = w / h
+						camera3         . updateProjectionMatrix ()
+						renderer3       . setSize ( w , h )
+						
+						orbitControls . update ()
 					}
 
 /*
