@@ -262,7 +262,7 @@
 
 <body>
 
-	<!-- <button id = 'fullscreen_button' onclick = 'Fullscreen_click ()'>[   ]</button> -->
+	<!-- <button id = 'fullscreen_button' onclick = 'Fullscreen_click ()'>[_^_]</button> -->
 	<div id = 'Ap' />
 	</div >
 	
@@ -352,6 +352,8 @@
 			let   orbitControls
 			
 			let   tunnel_texture
+			
+			let   orbiting = false
 			
 			const drag_mode = {
 				dm_none       : 0 ,
@@ -1267,8 +1269,10 @@
 					raycaster = new THREE . Raycaster ()
 
 					orbitControls                 = new THREE . OrbitControls ( camera , canvas )
-					orbitControls . enableDamping = true
-					orbitControls . dampingFactor = 0.05
+					//orbitControls . addEventListener ( 'start' , () => { orbiting = true  } )
+					//orbitControls . addEventListener ( 'end'   , () => { orbiting = false } )
+					//orbitControls . enableDamping = true
+					//orbitControls . dampingFactor = 0.05
 					orbitControls . enableZoom    = true
 					orbitControls . enablePan     = false
 					orbitControls . maxDistance   = 100
@@ -1674,7 +1678,7 @@
 						//})
 
 						Marker . Animate_markers ()
-						
+						/*
 						if ( Mouse_over_globe () ) {
 							orbitControls . enableRotate = true
 
@@ -1684,9 +1688,12 @@
 							  else                           document.body.style.cursor = 'grabbing'
 							}
 						} else {
-							orbitControls . enableRotate = false
-							document.body.style.cursor = 'default'
+							if ( ! orbiting ) {
+								orbitControls . enableRotate = false
+								document.body.style.cursor = 'default'
+							}
 						}
+						*/
 						
 						/*
 						if (marker_modes . mode == marker_modes.normal) {
@@ -1800,6 +1807,7 @@
 								   if ( Mouse_over_globe      () ) {
 								   drag_mode . mode = drag_mode . dm_planet
 							} else if ( Mouse_over_heighliner () ) {
+								   orbitControls . enableRotate = false
 								   drag_mode . mode = drag_mode . dm_heighliner
 							}
 						}
@@ -1851,6 +1859,8 @@
 							Evento . showed . show ()
 								
 						drag_mode . mode = drag_mode . dm_none
+						
+						orbitControls . enableRotate = true
 
 						Pointers.button = - 1
 					})
