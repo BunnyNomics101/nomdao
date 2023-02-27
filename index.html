@@ -1254,7 +1254,7 @@
 					  0.01,
 					  1000
 					)
-					camera3 . rotation . set ( 0 , Math . PI , 0 )
+					//camera3 . rotation . set ( 0 , Math . PI , 0 )
 					//camera3 . lookAt ( scene3 . position )
 					gl_canvas3          = document  . createElement ( 'canvas' )
 					gl_canvas3 . width  = width
@@ -1275,6 +1275,7 @@
 					//orbitControls . dampingFactor = 0.05
 					orbitControls . enableZoom    = true
 					orbitControls . enablePan     = false
+					orbitControls . minDistance   = 10
 					orbitControls . maxDistance   = 100
 					//orbitControls . minPolarAngle = Math . PI / 2
 					//orbitControls . maxPolarAngle = Math . PI / 2					
@@ -1741,12 +1742,12 @@
 
 						context  . drawImage  ( gl_canvas , 0 , 0 )
 						
-						const d3 = Math . min ( camera . position . length () , 100 )
-						if ( heighliner ) heighliner . position . set ( 0 , 10 , d3 )
+						const d = Math . min ( camera . position . length () , 100 )
+
+						if ( heighliner ) heighliner . position . set ( 0 , 10 , d < 15 ? 1000 : 0 - d * 1 )
 						renderer3 . render    ( scene3 , camera3 )
 						context   . drawImage ( gl_canvas3 , 0 , 0 )
 						
-						const d = Math . min ( camera . position . length () , 100 )
 						if ( frame_mesh ) frame_mesh . position . set ( 0 , .01 , d < 40 ? 1000 : .125 + d / 400 - .25 )
 						renderer2 . render    ( scene2 , camera2 )
 						context   . drawImage ( gl_canvas2 , 0 , 0 )
