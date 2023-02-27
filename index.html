@@ -271,7 +271,7 @@
 		const Globe = props => {
 			const [ states, set_states ]    = React . useState ( [  ] )
 			const container_ref             = React . useRef   ( null )	
-			
+						
 			let   canvas
 			let   context
 			
@@ -1744,7 +1744,7 @@
 						
 						const d = Math . min ( camera . position . length () , 100 )
 
-						if ( heighliner ) heighliner . position . set ( 0 , 10 , d < 15 ? 1000 : 0 - d * 1 )
+						if ( heighliner ) heighliner . position . set ( 0 , 10 , d < 10 ? 1000 : 0 - d * 1 )
 						renderer3 . render    ( scene3 , camera3 )
 						context   . drawImage ( gl_canvas3 , 0 , 0 )
 						
@@ -1823,16 +1823,15 @@
 
 						Pointers . target = event . target
 
-						Pointers . delta . set ( Pointers . down_position . x - Pointers . position . x , Pointers . down_position . y - Pointers . position . y )
+						Pointers . delta . set ( Pointers . position . x - Pointers . down_position . x , 
+						                         Pointers . position . y - Pointers . down_position . y )
 						
 						if ( drag_mode . mode == drag_mode . dm_heighliner ) {
-							const x_angle = ( Pointers . delta . y / canvas . height )
-							const y_angle = ( Pointers . delta . x / canvas . width  )
-							let mesh = null
-							if ( drag_mode . mode == drag_mode . dm_heighliner ) mesh = heighliner
-							if ( mesh ) {
-								mesh . rotation . x += x_angle
-								mesh . rotation . y += y_angle
+							const x_angle = ( Pointers . delta . y / canvas . height ) * 4
+							const y_angle = ( Pointers . delta . x / canvas . width  ) * 4
+							if ( heighliner ) {
+								heighliner . rotation . x = heighliner . x_angle + x_angle
+								heighliner . rotation . y = heighliner . y_angle + y_angle
 							}
 						}
 						
@@ -1841,8 +1840,19 @@
 					container_ref.current . addEventListener ( 'pointerup'   , function ( event ) {
 						if (event.type === "touchstart") Pointers.position.set(event.touches[0].clientX, event.touches[0].clientY)
 						else                             Pointers.position.set(event.x, event.y)
+						
+						if ( drag_mode . mode == drag_mode . dm_heighliner ) {
+							const x_angle = ( Pointers . delta . y / canvas . height ) * 4
+							const y_angle = ( Pointers . delta . x / canvas . width  ) * 4
+							if ( heighliner ) {
+								heighliner . x_angle += x_angle
+								heighliner . y_angle += y_angle
+							}
+						}
 
-						Pointers.button = event.button
+						drag_mode . mode = drag_mode . dm_none
+						
+						Pointers.button = -1
 
 						Pointers.target = event.target
 
@@ -1926,8 +1936,10 @@
 				gltf_loader . setDRACOLoader ( dracoLoader )
 				gltf_loader . load ( './assets/Heighliner_Compressed.glb' , ( gltf ) => {
 					heighliner = gltf . scene
+					heighliner . x_angle = 0
+					heighliner . y_angle = 90
 					//heighliner . position . set ( 0 , 0 , 25 )
-					heighliner . rotation . set ( 0 , 90 , 0 )
+					heighliner . rotation . set ( heighliner . x_angle , heighliner . y_angle , 0 )
 					scene3     . add            ( heighliner )
 				})
 				
