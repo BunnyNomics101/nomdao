@@ -1276,7 +1276,7 @@
 					orbitControls . enableZoom    = true
 					orbitControls . enablePan     = false
 					orbitControls . minDistance   = 10
-					orbitControls . maxDistance   = 100
+					orbitControls . maxDistance   = 250
 					//orbitControls . minPolarAngle = Math . PI / 2
 					//orbitControls . maxPolarAngle = Math . PI / 2					
 					
@@ -1373,7 +1373,7 @@
 					planet_stars_and_portal_group       = new THREE . Group ()
 					planet_stars_and_portal_group . add                     ( sphere )
 					
-					camera.position.z = 100
+					camera.position.z = 250
 
 					function createBoxes(countries){
 						let creation = 0
@@ -1679,6 +1679,7 @@
 						//})
 
 						Marker . Animate_markers ()
+
 						/*
 						if ( Mouse_over_globe () ) {
 							orbitControls . enableRotate = true
@@ -1742,13 +1743,13 @@
 
 						context  . drawImage  ( gl_canvas , 0 , 0 )
 						
-						const d = Math . min ( camera . position . length () , 100 )
+						const d = /*Math . min (*/ camera . position . length () //, 150 )
 
-						if ( heighliner ) heighliner . position . set ( 0 , 10 , d < 10 ? 1000 : 0 - d * 1 )
+						if ( heighliner ) heighliner . position . set ( 0 , 10 , d <  20 ? 1000 : - d )
 						renderer3 . render    ( scene3 , camera3 )
 						context   . drawImage ( gl_canvas3 , 0 , 0 )
 						
-						if ( frame_mesh ) frame_mesh . position . set ( 0 , .01 , d < 40 ? 1000 : .125 + d / 400 - .25 )
+						if ( frame_mesh ) frame_mesh . position . set ( 0 , .01 , d < 70 ? 1000 : d / 2048 )
 						renderer2 . render    ( scene2 , camera2 )
 						context   . drawImage ( gl_canvas2 , 0 , 0 )
 						
