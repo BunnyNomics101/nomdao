@@ -1745,11 +1745,11 @@
 						
 						const d = /*Math . min (*/ camera . position . length () //, 150 )
 
-						if ( heighliner ) heighliner . position . set ( 0 , 10 , d <  20 ? 1000 : - d )
+						if ( heighliner ) heighliner . position . set ( 0 , 10 , d <  20 ? 1000 : - d / 1.5 )
 						renderer3 . render    ( scene3 , camera3 )
 						context   . drawImage ( gl_canvas3 , 0 , 0 )
 						
-						if ( frame_mesh ) frame_mesh . position . set ( 0 , .01 , d < 70 ? 1000 : d / 2048 )
+						if ( frame_mesh ) frame_mesh . position . set ( 0 , 0 , d < 70 ? 1000 : d / 2500 )
 						renderer2 . render    ( scene2 , camera2 )
 						context   . drawImage ( gl_canvas2 , 0 , 0 )
 						
