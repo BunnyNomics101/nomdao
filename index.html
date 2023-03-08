@@ -362,78 +362,6 @@
 				mode          : 0 ,
 			}
 			
-			class Post                                   {
-				constructor ( args ) {
-					this . scene  = new THREE.Scene()
-					this . camera = new THREE.
-					  PerspectiveCamera(
-					  75, 
-					  width / height , //canvasContainer.offsetWidth / canvasContainer.offsetHeight,
-					  0.1,
-					  1000
-					)
-
-					//new renderer
-					this . gl_canvas           = document . createElement ( 'canvas' )
-					this . gl_canvas . width   = width
-					this . gl_canvas . height  = height
-
-					this . renderer            = new THREE.WebGLRenderer  ( { canvas : this . gl_canvas , alpha : true , antialias : false } )
-					this . renderer  . setSize                            ( width , height )
-					
-					this . mesh                = new THREE . Mesh (
-						new THREE . PlaneGeometry ( 2 , 2 ) ,
-						new THREE . ShaderMaterial ( {
-							vertexShader: `
-								varying vec2 UV ;
-								void main () {
-									UV          = uv ;
-									gl_Position = vec4 ( position , 1. ) ;
-								}` ,
-							fragmentShader: `
-								uniform float u_date ;
-								uniform vec2  u_resolution ;
-								varying vec2 UV ;
-								
-								void main () {
-								/*
-									//vec2  uv      = ( gl_FragCoord . xy - .5 * u_resolution . xy ) / u_resolution . y ;
-									vec2  uv      = UV * 2. - 1. ;
-									uv           *= 3. ;
-									vec3  col     = vec3 ( 0 ) ;
-									float d       = length ( uv ) ;
-									float m       = .02 / d ;
-									col          += m ;
-									
-									//float rays    = max ( 0. , 1. - abs ( uv . x * uv . y * 10. ) ) ;
-									float rays    = 1. - abs ( uv . x * 10000. )  ;
-									col          += rays ;
-									
-									gl_FragColor  = vec4 ( col , 1. ) ;
-								*/
-									vec2 R = u_resolution . xy ;
-									vec2 U = abs ( u + u - R ) ;
-									gl_FragColor = vec4 ( U . x < min ( .5 * R , R - U * 1.7 ) . y ) ;								
-								}
-							`, 
-						})
-					)
-					this . scene . add ( this . mesh )
-				}
-				render      ( args ) {
-					if ( ! args ) return
-					if ( ! 'texture_map' in args ) return
-					
-					//this . mesh     . material . uniforms . texture_map . value = args . texture_map
-					//this . mesh     . material . uniforms . texture_map . value = render_target . texture
-					//this . mesh     . material . uniforms [ 'texture_map' ] = { value : args . texture_map }
-					this . mesh     . material . uniforms [ 'u_date'       ] = { value : performance . now () }
-					this . mesh     . material . uniforms [ 'u_resolution' ] = { value : new THREE . Vector2 ( this . gl_canvas . width , this . gl_canvas . height ) }
-					console . log ( this . gl_canvas . width , this . gl_canvas . height )
-					//this . mesh     . material . needsUpdate = true
-					this . renderer . render                                  ( this . scene , this . camera )
-				}
-			}
 			class Tunnel                                 {
 				constructor          ( texture )    {
 				  this.init();
@@ -1192,7 +1120,6 @@
 					container_ref . current . appendChild ( canvas )
 
 					let portal
-					let post
 					
 					const canvasContainer = container_ref . current // document . querySelector('#canvasContainer')
 					
@@ -1205,6 +1132,7 @@
 					  0.1,
 					  1000
 					)
+					camera.position.z = 500
 					
 					scene . add ( new THREE . AmbientLight ( - 1 ) )
 					
@@ -1276,7 +1204,7 @@
 					orbitControls . enableZoom    = true
 					orbitControls . enablePan     = false
 					orbitControls . minDistance   = 10
-					orbitControls . maxDistance   = 250
+					orbitControls . maxDistance   = camera . position . length ()
 					//orbitControls . minPolarAngle = Math . PI / 2
 					//orbitControls . maxPolarAngle = Math . PI / 2					
 					
@@ -1373,8 +1301,6 @@
 					planet_stars_and_portal_group       = new THREE . Group ()
 					planet_stars_and_portal_group . add                     ( sphere )
 					
-					camera.position.z = 250
-
 					function createBoxes(countries){
 						let creation = 0
 					  countries.forEach(country => {
@@ -1658,8 +1584,6 @@
 					portal = new Portal( {radius: 3, lat: 25, lon: -40} )
 					planet_stars_and_portal_group . add ( portal )
 					
-					post = new Post ()
-
 					function animate () { // xxx
 						context . clearRect ( 0 , 0 , canvas . width , canvas . height )
 						//if ( tunnel ) {
@@ -1743,13 +1667,12 @@
 
 						context  . drawImage  ( gl_canvas , 0 , 0 )
 						
-						const d = /*Math . min (*/ camera . position . length () //, 150 )
-
-						if ( heighliner ) heighliner . position . set ( 0 , 10 , d <  20 ? 1000 : - d / 1.5 )
+						const d = camera . position . length ()
+						if ( heighliner ) heighliner . position . set ( 0 , 10 , d <  50 ? 1000 : - d / 3 )
 						renderer3 . render    ( scene3 , camera3 )
 						context   . drawImage ( gl_canvas3 , 0 , 0 )
 						
-						if ( frame_mesh ) frame_mesh . position . set ( 0 , 0 , d < 70 ? 1000 : d / 2500 )
+						if ( frame_mesh ) frame_mesh . position . set ( 0 , -.0075 , d < 300 ? 1000 : d / 5000 )
 						renderer2 . render    ( scene2 , camera2 )
 						context   . drawImage ( gl_canvas2 , 0 , 0 )
 						
@@ -1762,31 +1685,8 @@
 */
 						
 						//const texture = new THREE . CanvasTexture ( gl_canvas )
-						
-						//post     . render          ( { texture_map : texture } )
-						//context  . drawImage       ( post . gl_canvas , 0 , 0 )
-
 						//context  . drawImage       ( gl_canvas , 0 , 0 )
 						
-/*
-						scene    . add             ( planet_stars_and_portal_group )
-						renderer . setRenderTarget ( render_target )
-						renderer . render          ( scene , camera )
-						renderer . setRenderTarget ( null )
-						scene    . remove          ( planet_stars_and_portal_group )
-						//context  . drawImage ( gl_canvas , 0 , 0 )
-						post     . render                                                   ( { texture_map : render_target . texture } )
-						context  . drawImage                                                ( post . gl_canvas , 0 , 0 )
-						
-						if ( marker_modes . mode  != marker_modes . hidden ) scene . add    ( Marker . Mesh_group )
-						renderer . setRenderTarget                                          ( render_target )
-						//renderer . clear                                                    ()
-						renderer . render                                                   ( scene , camera )
-						renderer . setRenderTarget                                          ( null )
-						if ( marker_modes . mode  != marker_modes . hidden ) scene . remove ( Marker . Mesh_group )
-						post     . render                                                   ( { texture_map : render_target . texture } )
-						context  . drawImage                                                ( post . gl_canvas , 0 , 0 )
-*/						
 						Animate_eventos ()
 						
 						requestAnimationFrame(animate)
