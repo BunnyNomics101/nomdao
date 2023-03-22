@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-class Tunnel                                 {
+class Tunnel {
   constructor          ( args )    {
     this.init         ()
     this.createMesh   ()
@@ -29,21 +29,14 @@ class Tunnel                                 {
       y: 0
     }
     
-    /*
-    this . canvas          = document . createElement ( 'canvas' )
-    this . canvas . width  = canvas . width
-    this . canvas . height = canvas . height
-    */
-
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
-      //canvas: this . canvas //document.querySelector("#scene")
     });
     this.renderer.setSize(ww, wh);
 
     this.camera = new THREE.PerspectiveCamera(15, ww / wh, 0.01, 1000);
     this.camera.rotation.y = Math.PI;
-    this.camera.position.z = 0.35; // 2
+    this.camera.position.z = 0.35
 
     this.scene = new THREE.Scene();
   };
@@ -65,7 +58,6 @@ class Tunnel                                 {
     geometry = new THREE.Geometry();
     geometry.vertices = this.curve.getPoints(70);
     this.splineMesh = new THREE.Line(geometry, new THREE.LineBasicMaterial());
-    //this . scene . add ( this . splineMesh )
 
     this.tubeGeometry = new THREE.TubeGeometry(this.curve, 70, 0.02, 30, false);
     this.tubeGeometry_o = this.tubeGeometry.clone();
@@ -94,12 +86,8 @@ class Tunnel                                 {
     image.src = process.env.PUBLIC_URL + 'assets/galaxyTexture.jpg'
   };
   handleEvents         ( args )    {
-    window.addEventListener("resize", this.onResize.bind(this), false);
-    document.body.addEventListener(
-    "mousemove",
-    this.onMouseMove.bind(this),
-    false
-    );
+    window.addEventListener("resize", this.onResize.bind(this), false)
+    document.body.addEventListener( "mousemove", this.onMouseMove.bind(this), false )
   };
   onResize             ( args )    {
     const ww = window.innerWidth;
@@ -112,14 +100,11 @@ class Tunnel                                 {
   onMouseMove          ( e    )    {
     this.mouse.target.x = e.clientX
     this.mouse.target.y = e.clientY
-
-    //this.mouse.position.x = e.clientX
-    //this.mouse.position.y = e.clientY
   };
   initAnimation        ( args )    {
     
     // Timeline animation
-    var hyperSpace = new TimelineMax ( { repeat : -1 } )
+    //var hyperSpace = new TimelineMax ( { repeat : -1 } )
     /*
     // backwards
     hyperSpace . to ( this . textureParams , 4 , {
@@ -144,7 +129,7 @@ class Tunnel                                 {
     )
     */
     
-    var shake = new TimelineMax({ repeat: -1, repeatDelay: 5 });
+    //var shake = new TimelineMax({ repeat: -1, repeatDelay: 5 });
     
     /*
     shake.to(
@@ -202,7 +187,6 @@ class Tunnel                                 {
 
     this.camera.position.x = this.mouse.ratio.x * 0.044 - 0.025 + this.cameraShake.x;
     this.camera.position.y = this.mouse.ratio.y * 0.044 - 0.025;
-    
   };
   updateCurve          ( args )    {
     var i = 0;
